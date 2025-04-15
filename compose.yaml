@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  node:
+    image: node:lts-slim
+    working_dir: /app
+    env_file:
+      - .env
+    command: /bin/sh -c 'npm install && npm run dev'
+    ports:
+      - '3030:3030'
+    volumes:
+      - ./src:/app
+    depends_on:
+      - db
+
+  db:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./db:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASSWORD}
+      ME_CONFIG_MONGODB_SERVER: db
+      ME_CONFIG_MONGODB_PORT: ${DB_PORT}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
